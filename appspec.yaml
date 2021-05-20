@@ -1,0 +1,10 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "arn:aws:ecs:region:aws_account_id:task-definition/first-run-task-definition:7"
+        LoadBalancerInfo:
+          ContainerName: "sample-app"
+          ContainerPort: 80
+        PlatformVersion: "LATEST"
