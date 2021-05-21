@@ -3,8 +3,8 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:region:aws_account_id:task-definition/first-run-task-definition:7"
+        TaskDefinition: <TASK_DEFINITION>
         LoadBalancerInfo:
-          ContainerName: "sample-app"
+          ContainerName: "sample-website"
           ContainerPort: 80
         PlatformVersion: "LATEST"
