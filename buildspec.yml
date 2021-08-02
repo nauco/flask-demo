@@ -38,7 +38,7 @@ phases:
       - argocd login ${ARGO_URL} --username admin --password ${ARGO_PW} --insecure
       - |
         if  argocd app list -o name | grep -x ${APP_NAME} ; then
-        echo 'already exist'
+        argocd app sync ${APP_NAME}
         else
         argocd app create flask --repo ${OPS_REPO} --path ${APP_NAME} --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy auto
         fi
