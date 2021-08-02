@@ -1,17 +1,21 @@
 version: 0.2
+env:
+  git-credential-helper: yes
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
+      - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+      - chmod +x /usr/local/bin/argocd
       - aws --version
-      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $REPO_URL
-      - REPOSITORY_URI=$REPO_URL/$IMAGE_REPO_NAME
+      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - REPOSITORY_URI=${REPO_ECR}
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Docker image...          
+      - echo Building the Docker image...
       - docker build -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
   post_build:
@@ -20,15 +24,16 @@ phases:
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-      - echo Writing image definitions file...
-      - printf '[{"name":"container-demo","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-      - IMAGE_URI=`docker inspect --format='{{index .RepoDigests 0}}' $REPOSITORY_URI:$IMAGE_TAG`
-      - echo Writing imageDetail file...
-      - printf '{"ImageURI":"%s"}' $IMAGE_URI > imageDetail.json
-artifacts:
-  files: 
-    - imagedefinitions.json
-    - imageDetail.json
-    - taskdef.json
-    - appspec.yaml
-  discard-path: yes
+      - git config --global user.email "codebuild@mz.co.kr"
+      - git config --global user.name "hodong"
+      - git clone ${OPS_REPO}
+      - cd OperationRepo
+      - URL=$REPOSITORY_URI:$IMAGE_TAG
+      - mkdir -p ${APP_NAME}
+      - cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" > ${APP_NAME}/deployment.yaml
+      - cat service.yaml > ${APP_NAME}/service.yaml
+      - git add .
+      - git commit -m "change repo uri"
+      - git push 
+      - argocd login ${ARGO_URL} --username admin --password ${ARGO_PW} --insecure
+      - argocd app create flask --repo ${OPS_REPO} --path ${APP_NAME} --dest-server https://kubernetes.default.svc --dest-namespace default --sync-policy auto
