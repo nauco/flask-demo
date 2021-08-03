@@ -30,8 +30,8 @@ phases:
       - cd OperationRepo
       - URL=$REPOSITORY_URI:$IMAGE_TAG
       - mkdir -p ${APP_NAME}
-      - cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" > ${APP_NAME}/deployment.yaml
-      - cat service.yaml > ${APP_NAME}/service.yaml
+      - cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/deployment.yaml
+      - cat service.yaml | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/service.yaml
       - git add .
       - git commit -m "change repo uri"
       - git push 
