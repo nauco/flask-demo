@@ -29,9 +29,18 @@ phases:
       - git clone ${OPS_REPO}
       - cd OperationRepo
       - URL=$REPOSITORY_URI:$IMAGE_TAG
-      - mkdir -p ${APP_NAME}
-      - cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/deployment.yaml
-      - cat service.yaml | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/service.yaml
+      - REPO_ECR_NAME=$(echo "$REPOSITORY_URI" | sed 's:.*/::')
+      - echo $REPO_ECR_NAME
+      - |
+        if [ -d ${APP_NAME} ]
+        then
+        echo "Directory already exists"
+        cat ${APP_NAME}/deployment.yaml | sed -e "1,/${REPO_ECR_NAME}:/s/\(${REPO_ECR_NAME}:\).*/\1${IMAGE_TAG}/" > ${APP_NAME}/deployment.yaml    
+        else
+        mkdir ${APP_NAME}
+        cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/deployment.yaml
+        cat service.yaml | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/service.yaml
+        fi
       - git add .
       - git commit -m "change repo uri"
       - git push 
