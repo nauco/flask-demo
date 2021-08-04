@@ -34,13 +34,17 @@ phases:
       - |
         if [ -d ${APP_NAME} ]
         then
+        cat ${APP_NAME}/deployment.yaml
+        mv ${APP_NAME}/deployment.yaml ${APP_NAME}/deployment2.yaml
         echo "Directory already exists"
-        cat ${APP_NAME}/deployment.yaml | sed -e "1,/${REPO_ECR_NAME}:/s/\(${REPO_ECR_NAME}:\).*/\1${IMAGE_TAG}/" > ${APP_NAME}/deployment.yaml    
+        cat ${APP_NAME}/deployment2.yaml | sed -e "1,/${REPO_ECR_NAME}:/s/\(${REPO_ECR_NAME}:\).*/\1${IMAGE_TAG}/" > ${APP_NAME}/deployment.yaml  
+        rm ${APP_NAME}/deployment2.yaml
         else
         mkdir ${APP_NAME}
         cat deployment.yaml | sed "s|{{imageURL}}|$URL|g" | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/deployment.yaml
         cat service.yaml | sed "s|{{APP_NAME}}|$APP_NAME|g" > ${APP_NAME}/service.yaml
         fi
+      - cat ${APP_NAME}/deployment.yaml
       - git add .
       - git commit -m "change repo uri"
       - git push 
