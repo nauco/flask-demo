@@ -25,7 +25,7 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - git config --global user.email "codebuild@mz.co.kr"
-      - git config --global user.name "hodong"
+      - git config --global user.name "codebuild"
       - git clone ${OPS_REPO}
       - cd OperationRepo
       - URL=$REPOSITORY_URI:$IMAGE_TAG
